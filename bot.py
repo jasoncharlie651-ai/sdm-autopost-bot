@@ -12,7 +12,7 @@ MessageHandler,
 filters
 )
 
-BOT_TOKEN = os.getenv("8704053776:AAHPrXVSWzEhR_GelE2tnufYtxlFUEMpMYQ")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = "@sdmsmmpanel"
 
 WEBSITE = "https://sdmpanel.co.in"
