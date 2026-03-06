@@ -41,35 +41,82 @@ AUTO_REPLIES = {
 "buy": f"🛒 Order now:\n{WEBSITE}"
 }
 
-def create_banner(title, subtitle, color):
+def create_ai_banner(title, subtitle, color1, color2):
 
     width = 1200
     height = 1200
 
-    img = Image.new("RGB",(width,height),color)
-
+    # create gradient background
+    img = Image.new("RGB", (width, height), color1)
     draw = ImageDraw.Draw(img)
 
+    for i in range(height):
+        r = int(color1[0] + (color2[0]-color1[0]) * i/height)
+        g = int(color1[1] + (color2[1]-color1[1]) * i/height)
+        b = int(color1[2] + (color2[2]-color1[2]) * i/height)
+        draw.line([(0,i),(width,i)], fill=(r,g,b))
+
     font_big = ImageFont.load_default()
+    font_mid = ImageFont.load_default()
     font_small = ImageFont.load_default()
 
+    # logo
     try:
-
-        logo = Image.open("assets/logo.png").resize((200,200))
+        logo = Image.open("assets/logo.png").resize((180,180))
 
         if logo.mode == "RGBA":
-            img.paste(logo,(50,50),logo)
+            img.paste(logo,(60,60),logo)
         else:
-            img.paste(logo,(50,50))
-
+            img.paste(logo,(60,60))
     except:
         pass
 
-    draw.text((120,400),title,fill="white",font=font_big)
-    draw.text((120,600),subtitle,fill="white",font=font_small)
+    # headline
+    draw.text(
+        (120,350),
+        title,
+        fill="white",
+        font=font_big
+    )
+
+    # subtitle
+    draw.text(
+        (120,500),
+        subtitle,
+        fill="white",
+        font=font_mid
+    )
+
+    # feature bullets
+    features = [
+        "✔ Real Followers",
+        "✔ Instant Delivery",
+        "✔ Cheap Prices",
+        "✔ 24/7 Panel"
+    ]
+
+    y = 650
+
+    for f in features:
+        draw.text((120,y), f, fill="white", font=font_small)
+        y += 70
+
+    # CTA
+    draw.rectangle(
+        [(120,900),(650,980)],
+        fill=(255,255,255)
+    )
 
     draw.text(
-        (120,1000),
+        (140,920),
+        "ORDER NOW →",
+        fill="black",
+        font=font_small
+    )
+
+    # footer
+    draw.text(
+        (120,1050),
         "sdmpanel.co.in | t.me/sdmsmmpanel",
         fill="white",
         font=font_small
@@ -78,12 +125,11 @@ def create_banner(title, subtitle, color):
     if not os.path.exists("banners"):
         os.mkdir("banners")
 
-    path = f"banners/banner_{random.randint(1,99999)}.png"
+    path = f"banners/banner_{random.randint(1,999999)}.png"
 
     img.save(path)
 
     return path
-
 
 async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
@@ -104,39 +150,39 @@ async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Banner posted.")
 
 
-async def promo(update,context):
+async def promo(update, context):
 
-    image = create_banner(
-    "BOOST YOUR SOCIAL MEDIA 🚀",
-    "Followers • Likes • Views",
-    (25,45,100)
+    image = create_ai_banner(
+        "BOOST YOUR SOCIAL MEDIA 🚀",
+        "Followers • Likes • Views • Subscribers",
+        (30,60,200),
+        (140,40,200)
     )
 
     await context.bot.send_photo(
-    CHANNEL_ID,
-    photo=open(image,"rb"),
-    caption=f"🚀 Boost your social media instantly\n{WEBSITE}"
+        CHANNEL_ID,
+        photo=open(image,"rb"),
+        caption="🚀 Boost your social media instantly\nhttps://sdmpanel.co.in"
     )
 
-    await update.message.reply_text("Promo banner posted.")
+    await update.message.reply_text("AI promo banner posted.")
 
+async def deal_banner(update, context):
 
-async def deal_banner(update,context):
-
-    image = create_banner(
-    "🔥 FLASH DEAL",
-    "1000 Followers Starting ₹49",
-    (160,40,40)
+    image = create_ai_banner(
+        "🔥 FLASH DEAL",
+        "1000 Followers Starting ₹49",
+        (200,50,50),
+        (255,120,40)
     )
 
     await context.bot.send_photo(
-    CHANNEL_ID,
-    photo=open(image,"rb"),
-    caption=f"💰 Limited offer\n{WEBSITE}"
+        CHANNEL_ID,
+        photo=open(image,"rb"),
+        caption="💰 Limited time offer\nhttps://sdmpanel.co.in"
     )
 
     await update.message.reply_text("Deal banner posted.")
-
 
 async def review_banner(update,context):
 
