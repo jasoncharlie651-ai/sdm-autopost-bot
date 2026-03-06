@@ -219,7 +219,7 @@ def main():
     app.add_handler(CommandHandler("schedule", schedule))
     app.add_handler(CommandHandler("listposts", listposts))
     app.add_handler(CommandHandler("generate", generate))
-
+    app.add_handler(CommandHandler("reseller", reseller))
     loop = asyncio.get_event_loop()
 
     loop.create_task(autopost_loop(app))
