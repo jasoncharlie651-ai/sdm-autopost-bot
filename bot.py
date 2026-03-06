@@ -151,8 +151,8 @@ def generate_ai_banner(title):
 
     draw = ImageDraw.Draw(bg)
 
-    font_big = ImageFont.truetype("arial.ttf",80)
-    font_small = ImageFont.truetype("arial.ttf",40)
+    font_big = ImageFont.load_default()
+    font_small = ImageFont.load_default()
 
     logo = Image.open("assets/logo.png").resize((200,200))
 
@@ -212,6 +212,12 @@ async def autoreply(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(AUTO_REPLIES[key])
 
             return
+            
+def get_font(size):
+    try:
+        return ImageFont.truetype("arial.ttf", size)
+    except:
+        return ImageFont.load_default()
 
 def main():
 
