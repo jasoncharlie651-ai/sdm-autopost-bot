@@ -133,6 +133,58 @@ Details:
 """
 )
 
+from PIL import Image, ImageDraw, ImageFont
+import random
+
+backgrounds = [
+    "assets/bg1.png",
+    "assets/bg2.png",
+    "assets/bg3.png"
+]
+
+def generate_ai_banner(title):
+
+    width = 1200
+    height = 1200
+
+    bg = Image.open(random.choice(backgrounds)).resize((width,height))
+
+    draw = ImageDraw.Draw(bg)
+
+    font_big = ImageFont.truetype("arial.ttf",80)
+    font_small = ImageFont.truetype("arial.ttf",40)
+
+    logo = Image.open("assets/logo.png").resize((200,200))
+
+    bg.paste(logo,(60,60),logo)
+
+    draw.text(
+        (120,450),
+        title,
+        fill="white",
+        font=font_big
+    )
+
+    draw.text(
+        (120,650),
+        "Followers • Likes • Views",
+        fill="white",
+        font=font_small
+    )
+
+    draw.text(
+        (120,1000),
+        "sdmpanel.co.in | t.me/sdmsmmpanel",
+        fill="white",
+        font=font_small
+    )
+
+    path="banner.png"
+
+    bg.save(path)
+
+    return path
+
 async def autoreply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.lower()
