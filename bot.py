@@ -236,7 +236,7 @@ async def autopost(app):
 
 def main():
 
-    app = Application.builder().token(8704053776:AAHPrXVSWzEhR_GelE2tnufYtxlFUEMpMYQ).build()
+    app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start",start))
     app.add_handler(CommandHandler("promo",promo))
