@@ -3,111 +3,159 @@ import json
 import logging
 import os
 import random
-from datetime import datetime
+from datetime import datetime, time
 
-from telegram import Bot
+from telegram import Update, Bot
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
     level=logging.INFO,
 )
-logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID", "@sdmsmmpanel")
-MIN_HOURS = float(os.getenv("MIN_HOURS", "2"))
-MAX_HOURS = float(os.getenv("MAX_HOURS", "3"))
-POSTS_FILE = os.getenv("POSTS_FILE", "posts.json")
+GROUP_ID = os.getenv("GROUP_ID", "@sdmsmmpanelchat")
+POSTS_FILE = "posts.json"
+BANNERS_FOLDER = "banners"
+
+BEST_TIMES = [
+    time(9, 0),
+    time(12, 0),
+    time(15, 0),
+    time(18, 0),
+    time(21, 0),
+]
+
+AUTO_REPLIES = {
+    "price": "💰 You can check all service prices here:\nhttps://sdmpanel.co.in",
+    "panel": "🚀 Order from SDM SMM Panel:\nhttps://sdmpanel.co.in",
+    "followers": "📈 Boost followers instantly using SDM SMM Panel\nhttps://sdmpanel.co.in",
+    "website": "🌐 Our official website:\nhttps://sdmpanel.co.in",
+}
 
 DEFAULT_POSTS = [
-    {
-        "text": "🚀 BOOST YOUR SOCIAL MEDIA\n\nInstagram • TikTok • YouTube • Facebook\n\n✅ Followers\n✅ Likes\n✅ Views\n✅ Subscribers\n\nFast • Cheap • Reliable\n\n💎 SDM SMM PANEL\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel"
-    },
-    {
-        "text": "🔥 Grow your social presence with SDM SMM Panel\n\nGet high quality services for:\n• Instagram\n• TikTok\n• YouTube\n• Facebook\n• OTT & Premium Apps\n\n✅ Fast Delivery\n✅ Affordable Rates\n✅ Trusted Service\n\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel"
-    },
-    {
-        "text": "📈 Need more engagement?\n\nWe provide:\n• Followers\n• Likes\n• Views\n• Subscribers\n• Watchtime\n• Premium app services\n\nOrder now from SDM SMM Panel\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel"
-    },
-    {
-        "text": "⚡ Fast. Cheap. Reliable.\n\nYour one-stop hub for all SMM panel services.\n\n💎 SDM SMM PANEL\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel"
-    },
-    {
-        "text": "🎯 Want to boost your brand or page?\n\nSDM SMM Panel helps creators, businesses and influencers grow faster.\n\n🌐 Website: https://sdmpanel.co.in\n📢 Telegram: t.me/sdmsmmpanel"
-    },
-    {
-        "text": "🔥 Daily deals available on SDM SMM Panel\n\nGrow on Instagram, TikTok, YouTube and Facebook with trusted services.\n\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel"
-    }
+    "🚀 BOOST YOUR SOCIAL MEDIA\n\nInstagram • TikTok • YouTube • Facebook\n\nFollowers • Likes • Views • Subscribers\n\nFast • Cheap • Reliable\n\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel",
+    "🔥 Grow faster with SDM SMM Panel\n\nBest services for creators & influencers\n\n🌐 https://sdmpanel.co.in\n📢 t.me/sdmsmmpanel",
+    "📈 Need more followers, likes and views?\n\nOrder now from SDM SMM Panel\n\n🌐 https://sdmpanel.co.in",
 ]
 
 
-def ensure_posts_file():
-    if not os.path.exists(POSTS_FILE):
-        with open(POSTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(DEFAULT_POSTS, f, ensure_ascii=False, indent=2)
-        logger.info("Created default posts.json")
-
-
 def load_posts():
-    ensure_posts_file()
-    with open(POSTS_FILE, "r", encoding="utf-8") as f:
-        posts = json.load(f)
+    if not os.path.exists(POSTS_FILE):
+        with open(POSTS_FILE, "w") as f:
+            json.dump(DEFAULT_POSTS, f)
+        return DEFAULT_POSTS
 
-    if not isinstance(posts, list) or not posts:
-        raise ValueError("posts.json must contain a non-empty JSON list.")
-
-    cleaned = []
-    for item in posts:
-        if isinstance(item, dict) and item.get("text", "").strip():
-            cleaned.append({"text": item["text"].strip()})
-
-    if not cleaned:
-        raise ValueError("posts.json has no valid posts.")
-
-    return cleaned
+    with open(POSTS_FILE) as f:
+        return json.load(f)
 
 
-async def send_post(bot: Bot, text: str):
-    await bot.send_message(chat_id=CHANNEL_ID, text=text)
-    logger.info("Posted successfully at %s", datetime.now().isoformat())
-
-
-async def scheduler():
-    if not BOT_TOKEN:
-        raise ValueError("BOT_TOKEN is missing. Add it in Railway Variables.")
-
-    if MIN_HOURS <= 0 or MAX_HOURS <= 0 or MIN_HOURS > MAX_HOURS:
-        raise ValueError("Check MIN_HOURS and MAX_HOURS env values.")
-
-    bot = Bot(token=BOT_TOKEN)
-    posts = load_posts()
-    used_indexes = []
-
-    logger.info("Bot started for channel: %s", CHANNEL_ID)
-    logger.info("Posting interval: %s to %s hours", MIN_HOURS, MAX_HOURS)
+async def autopost(app: Application):
+    await app.bot.initialize()
 
     while True:
-        try:
-            posts = load_posts()
+        now = datetime.now().time()
 
-            available = [i for i in range(len(posts)) if i not in used_indexes]
-            if not available:
-                used_indexes = []
-                available = list(range(len(posts)))
+        for post_time in BEST_TIMES:
+            if abs(now.hour - post_time.hour) <= 0 and now.minute == post_time.minute:
+                posts = load_posts()
+                text = random.choice(posts)
 
-            idx = random.choice(available)
-            used_indexes.append(idx)
+                banner_path = None
+                if os.path.exists(BANNERS_FOLDER):
+                    banners = os.listdir(BANNERS_FOLDER)
+                    if banners:
+                        banner_path = os.path.join(
+                            BANNERS_FOLDER, random.choice(banners)
+                        )
 
-            await send_post(bot, posts[idx]["text"])
+                if banner_path:
+                    with open(banner_path, "rb") as img:
+                        await app.bot.send_photo(
+                            chat_id=CHANNEL_ID,
+                            photo=img,
+                            caption=text,
+                        )
+                else:
+                    await app.bot.send_message(CHANNEL_ID, text)
 
-        except Exception as e:
-            logger.exception("Error while posting: %s", e)
+                logging.info("Posted scheduled promotion")
 
-        wait_hours = random.uniform(MIN_HOURS, MAX_HOURS)
-        wait_seconds = int(wait_hours * 3600)
-        logger.info("Next post in %.2f hours", wait_hours)
-        await asyncio.sleep(wait_seconds)
+        await asyncio.sleep(60)
+
+
+async def post_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type != "private":
+        return
+
+    text = " ".join(context.args)
+
+    if not text:
+        await update.message.reply_text("Usage: /post your message")
+        return
+
+    await context.bot.send_message(chat_id=CHANNEL_ID, text=text)
+
+    await update.message.reply_text("✅ Post sent to channel")
+
+
+async def banner_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message.reply_to_message:
+        await update.message.reply_text("Reply to an image with /banner")
+        return
+
+    photo = update.message.reply_to_message.photo[-1]
+
+    os.makedirs(BANNERS_FOLDER, exist_ok=True)
+
+    file = await photo.get_file()
+
+    filename = f"{BANNERS_FOLDER}/banner_{datetime.now().timestamp()}.jpg"
+
+    await file.download_to_drive(filename)
+
+    await update.message.reply_text("✅ Banner saved for autopost")
+
+
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat.type not in ["group", "supergroup"]:
+        return
+
+    text = update.message.text.lower()
+
+    for key in AUTO_REPLIES:
+        if key in text:
+            await update.message.reply_text(AUTO_REPLIES[key])
+            return
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🤖 SDM Panel Bot Active\n\nCommands:\n/post message\n/banner"
+    )
+
+
+def main():
+    app = Application.builder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("post", post_command))
+    app.add_handler(CommandHandler("banner", banner_command))
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(autopost(app))
+
+    app.run_polling()
 
 
 if __name__ == "__main__":
-    asyncio.run(scheduler())
+    main()
