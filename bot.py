@@ -185,6 +185,22 @@ def generate_ai_banner(title):
 
     return path
 
+async def banner(update, context):
+
+    text = " ".join(context.args)
+
+    if not text:
+        await update.message.reply_text("Usage: /banner Your text")
+        return
+
+    image = generate_ai_banner(text)
+
+    await context.bot.send_photo(
+        chat_id="@sdmsmmpanel",
+        photo=open(image,"rb"),
+        caption=text
+    )
+
 async def autoreply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text = update.message.text.lower()
