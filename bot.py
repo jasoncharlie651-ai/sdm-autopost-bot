@@ -1,232 +1,166 @@
 import asyncio
 import json
-import logging
-import os
 import random
-from datetime import datetime, timedelta
-from pathlib import Path
-
+import os
+from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
-
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID", "@sdmsmmpanel")
-WEBSITE_URL = "https://sdmpanel.co.in"
+CHANNEL_ID = "@sdmsmmpanel"
 
-DATA_DIR = Path("data")
-POSTS_FILE = DATA_DIR / "posts.json"
-SCHEDULE_FILE = DATA_DIR / "schedule.json"
+WEBSITE = "https://sdmpanel.co.in"
+DIRECT = "https://t.me/sdmsmmpanel?direct"
 
-DATA_DIR.mkdir(exist_ok=True)
+posts = [
 
-DEFAULT_POSTS = [
-"🚀 BOOST YOUR SOCIAL MEDIA\n\nFollowers • Likes • Views • Subscribers\n\n🌐 https://sdmpanel.co.in",
-"🔥 Grow faster using SDM SMM Panel\n\nBest SMM services available now\n\n🌐 https://sdmpanel.co.in",
-"📈 Need more engagement?\n\nUse SDM SMM Panel today\n\n🌐 https://sdmpanel.co.in"
+"🚀 Skyrocket your social media success!\nGet real followers, likes & views in minutes with SDM SMM Panel.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"💥 Want viral growth?\nSDM SMM Panel delivers instant followers, likes & watchtime.\nFast - Safe - Trusted\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"📊 Boost your brand presence now!\n100% authentic SMM services crafted for creators and marketers.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"🌟 Be the next trending creator!\nPowered by SDM SMM Panel — boosting your reach with quality engagement.\n🌐 https://sdmpanel.co.in",
+
+"🔥 Supercharge your social proof!\nReal results, real fast, real affordable.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"⚡ Instant boost for influencers!\nGrow faster on TikTok, Instagram & YouTube with SDM SMM Panel.\n🌐 https://sdmpanel.co.in",
+
+"📈 More followers. More likes. More growth.\nTake your social media to new heights with SDM SMM Panel.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"💎 The ultimate SMM solution!\nDesigned for agencies, creators & brands that demand quality.\n🌐 https://sdmpanel.co.in",
+
+"🚀 Level up your online game.\nSDM SMM Panel = trusted source for social growth.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"🔝 Maximize your reach today!\nTikTok - Instagram - YouTube - Facebook\nAll from one panel — SDM SMM Panel\n🌐 https://sdmpanel.co.in",
+
+"⚙️ Automated SMM services 24/7!\nFast delivery, best support, unbeatable prices.\n🌐 https://sdmpanel.co.in",
+
+"💬 Social growth made simple.\nJust a few clicks on SDM SMM Panel and watch your numbers rise.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"🌈 Boost engagement across all platforms!\nFollowers, likes, views — all in one place.\n🌐 https://sdmpanel.co.in",
+
+"🎯 Grow faster, smarter, cheaper!\nSDM SMM Panel helps you dominate your niche.\n🌐 https://sdmpanel.co.in",
+
+"💡 Get noticed instantly!\nSDM SMM Panel delivers high-quality social media growth 24/7.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"🎬 Creators love SDM!\nQuick boosts for your YouTube and TikTok journey.\n🌐 https://sdmpanel.co.in",
+
+"🚨 Don’t wait to go viral!\nSDM SMM Panel puts your brand in front of millions.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct",
+
+"💪 Reliable SMM power for resellers & influencers.\nJoin SDM SMM Panel and start earning or growing today!\n🌐 https://sdmpanel.co.in",
+
+"🏆 Enhance your digital influence effortlessly.\nTrusted by thousands worldwide — SDM SMM Panel\n🌐 https://sdmpanel.co.in",
+
+"⚡ Your shortcut to social media fame!\nJoin SDM SMM Panel — quick, affordable & effective SMM services.\n🌐 https://sdmpanel.co.in | 📢 https://t.me/sdmsmmpanel?direct"
+
 ]
 
+AUTO_REPLIES = {
+"price": f"💰 Check latest services here:\n{WEBSITE}",
+"panel": f"🚀 Order from SDM Panel:\n{WEBSITE}",
+"followers": f"📈 Boost followers instantly:\n{WEBSITE}",
+"buy": f"🛒 Order here:\n{WEBSITE}"
+}
 
-def load_json(path, default):
-    if not path.exists():
-        with open(path, "w") as f:
-            json.dump(default, f)
-        return default
-
-    with open(path) as f:
-        return json.load(f)
-
-
-def save_json(path, data):
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-
-
-def load_posts():
-    return load_json(POSTS_FILE, DEFAULT_POSTS)
-
-
-def load_schedule():
-    return load_json(SCHEDULE_FILE, [])
-
-
-async def autopost_loop(app: Application):
+async def autopost(app):
     await app.bot.initialize()
 
     while True:
-        try:
-            posts = load_posts()
 
-            if not posts:
-                await asyncio.sleep(600)
-                continue
+        post = random.choice(posts)
 
-            post = random.choice(posts)
+        await app.bot.send_message(CHANNEL_ID, post)
 
-            await app.bot.send_message(CHANNEL_ID, post)
+        wait = random.randint(2,3) * 3600
 
-            wait_hours = random.randint(2, 3)
+        await asyncio.sleep(wait)
 
-            await asyncio.sleep(wait_hours * 3600)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-        except Exception as e:
-            logging.error(e)
-            await asyncio.sleep(300)
-async def reseller(update, context):
+    text = f"""
+🤖 SDM PANEL BOT
+
+Commands:
+
+/generate - create promo
+/reseller - reseller link
+/order name | service | qty | link
+"""
+
+    await update.message.reply_text(text)
+
+async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    post = random.choice(posts)
+
+    await update.message.reply_text(post)
+
+async def reseller(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     user_id = update.effective_user.id
-    referral = f"https://t.me/sdmsmmpanel?start=ref{user_id}"
+
+    link = f"https://t.me/sdmsmmpanel?start=ref{user_id}"
 
     text = f"""
 💼 SDM PANEL RESELLER PROGRAM
 
-Earn rewards by inviting users to SDM SMM Panel.
+Invite users and earn rewards.
 
 Your referral link:
-{referral}
 
-Share this link with your customers and audience.
-When they join through your link, you can track them for reseller rewards.
+{link}
 
-🌐 https://sdmpanel.co.in
-📢 https://t.me/sdmsmmpanel?direct
+🌐 {WEBSITE}
 """
 
     await update.message.reply_text(text)
 
-async def scheduler_loop(app: Application):
-    await app.bot.initialize()
+async def order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    while True:
-        try:
-            schedule = load_schedule()
-            now = datetime.utcnow()
-
-            for item in schedule:
-                post_time = datetime.fromisoformat(item["time"])
-
-                if now >= post_time and not item.get("done"):
-                    await app.bot.send_message(CHANNEL_ID, item["text"])
-
-                    item["done"] = True
-
-                    save_json(SCHEDULE_FILE, schedule)
-
-            await asyncio.sleep(60)
-
-        except Exception as e:
-            logging.error(e)
-            await asyncio.sleep(60)
-
-
-async def addpost(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = " ".join(context.args)
 
-    if not text:
-        await update.message.reply_text("Usage: /addpost your message")
-        return
-
-    posts = load_posts()
-
-    posts.append(text)
-
-    save_json(POSTS_FILE, posts)
-
-    await update.message.reply_text("✅ Post added to rotation list")
-
-
-async def schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    raw = " ".join(context.args)
-
-    if "|" not in raw:
-        await update.message.reply_text("Usage: /schedule YYYY-MM-DD HH:MM | message")
-        return
-
-    time_str, text = raw.split("|", 1)
-
-    try:
-        post_time = datetime.strptime(time_str.strip(), "%Y-%m-%d %H:%M")
-    except:
-        await update.message.reply_text("Invalid time format")
-        return
-
-    schedule = load_schedule()
-
-    schedule.append({
-        "time": post_time.isoformat(),
-        "text": text.strip(),
-        "done": False
-    })
-
-    save_json(SCHEDULE_FILE, schedule)
-
-    await update.message.reply_text("✅ Post scheduled")
-
-
-async def listposts(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    posts = load_posts()
-
-    msg = "\n\n".join(posts[:10])
-
-    await update.message.reply_text("Current rotating posts:\n\n" + msg)
-
-
-async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    ideas = [
-        "🔥 Limited Time Offer on Instagram Followers",
-        "⚡ Cheapest TikTok Views available now",
-        "🚀 Boost your YouTube channel instantly",
-        "💰 Discount available on SMM services today"
-    ]
-
-    text = random.choice(ideas) + "\n\nOrder now:\n" + WEBSITE_URL
-
-    await update.message.reply_text(text)
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
     await update.message.reply_text(
-"""
-🤖 SDM PANEL BOT READY
+f"""
+✅ Order request received
 
-Commands:
+Send order manually on website:
 
-/addpost message
-Add message to auto rotation
+{WEBSITE}
 
-/schedule YYYY-MM-DD HH:MM | message
-Schedule a post
-
-/listposts
-Show rotating messages
-
-/generate
-Generate promo post
+Details:
+{text}
 """
 )
 
+async def autoreply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    text = update.message.text.lower()
+
+    for key in AUTO_REPLIES:
+
+        if key in text:
+
+            await update.message.reply_text(AUTO_REPLIES[key])
+
+            return
 
 def main():
-
-    if not BOT_TOKEN:
-        raise Exception("BOT_TOKEN missing")
 
     app = Application.builder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("addpost", addpost))
-    app.add_handler(CommandHandler("schedule", schedule))
-    app.add_handler(CommandHandler("listposts", listposts))
     app.add_handler(CommandHandler("generate", generate))
     app.add_handler(CommandHandler("reseller", reseller))
+    app.add_handler(CommandHandler("order", order))
+
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, autoreply))
+
     loop = asyncio.get_event_loop()
 
-    loop.create_task(autopost_loop(app))
-    loop.create_task(scheduler_loop(app))
+    loop.create_task(autopost(app))
 
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()
