@@ -221,7 +221,7 @@ def main():
     app.add_handler(CommandHandler("generate", generate))
     app.add_handler(CommandHandler("reseller", reseller))
     app.add_handler(CommandHandler("order", order))
-
+    app.add_handler(CommandHandler("banner", banner))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, autoreply))
 
     loop = asyncio.get_event_loop()
