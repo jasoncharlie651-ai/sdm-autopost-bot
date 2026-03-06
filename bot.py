@@ -73,7 +73,26 @@ async def autopost_loop(app: Application):
         except Exception as e:
             logging.error(e)
             await asyncio.sleep(300)
+async def reseller(update, context):
+    user_id = update.effective_user.id
+    referral = f"https://t.me/sdmsmmpanel?start=ref{user_id}"
 
+    text = f"""
+💼 SDM PANEL RESELLER PROGRAM
+
+Earn rewards by inviting users to SDM SMM Panel.
+
+Your referral link:
+{referral}
+
+Share this link with your customers and audience.
+When they join through your link, you can track them for reseller rewards.
+
+🌐 https://sdmpanel.co.in
+📢 https://t.me/sdmsmmpanel?direct
+"""
+
+    await update.message.reply_text(text)
 
 async def scheduler_loop(app: Application):
     await app.bot.initialize()
