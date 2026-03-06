@@ -13,6 +13,7 @@ filters
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 CHANNEL_ID = "@sdmsmmpanel"
 
 WEBSITE = "https://sdmpanel.co.in"
@@ -28,31 +29,17 @@ posts = [
 
 "🌟 Be the next trending creator!\nQuality engagement services.\n🌐 https://sdmpanel.co.in",
 
-"🔥 Supercharge your social proof!\nReal results fast.\n🌐 https://sdmpanel.co.in\n📢 https://t.me/sdmsmmpanel?direct",
+"🔥 Supercharge your social proof!\nReal results fast.\n🌐 https://sdmpanel.co.in",
 
-"⚡ Instant boost for influencers!\nTikTok • Instagram • YouTube\n🌐 https://sdmpanel.co.in",
-
-"📈 More followers. More growth.\nTake your social media higher.\n🌐 https://sdmpanel.co.in",
-
-"💎 The ultimate SMM solution!\nFor agencies & creators.\n🌐 https://sdmpanel.co.in",
-
-"🚀 Level up your online game.\nTrusted SMM source.\n🌐 https://sdmpanel.co.in",
-
-"🔝 Maximize your reach today!\nTikTok • Instagram • YouTube\n🌐 https://sdmpanel.co.in"
+"⚡ Instant boost for influencers!\nTikTok • Instagram • YouTube\n🌐 https://sdmpanel.co.in"
 ]
 
 AUTO_REPLIES = {
-"price": f"💰 Check latest services:\n{WEBSITE}",
+"price": f"💰 Check services:\n{WEBSITE}",
 "panel": f"🚀 Order here:\n{WEBSITE}",
 "followers": f"📈 Boost followers instantly:\n{WEBSITE}",
 "buy": f"🛒 Order now:\n{WEBSITE}"
 }
-
-def get_font(size):
-    try:
-        return ImageFont.truetype("assets/font.ttf", size)
-    except:
-        return ImageFont.load_default()
 
 def create_banner(title, subtitle, color):
 
@@ -63,21 +50,29 @@ def create_banner(title, subtitle, color):
 
     draw = ImageDraw.Draw(img)
 
-    font_big = get_font(70)
-    font_small = get_font(40)
+    font_big = ImageFont.load_default()
+    font_small = ImageFont.load_default()
 
-    logo = Image.open("assets/logo.png").resize((200,200))
+    try:
 
-    img.paste(logo,(50,50),logo)
+        logo = Image.open("assets/logo.png").resize((200,200))
+
+        if logo.mode == "RGBA":
+            img.paste(logo,(50,50),logo)
+        else:
+            img.paste(logo,(50,50))
+
+    except:
+        pass
 
     draw.text((120,400),title,fill="white",font=font_big)
     draw.text((120,600),subtitle,fill="white",font=font_small)
 
     draw.text(
-    (120,1000),
-    "sdmpanel.co.in | t.me/sdmsmmpanel",
-    fill="white",
-    font=font_small
+        (120,1000),
+        "sdmpanel.co.in | t.me/sdmsmmpanel",
+        fill="white",
+        font=font_small
     )
 
     if not os.path.exists("banners"):
@@ -88,6 +83,7 @@ def create_banner(title, subtitle, color):
     img.save(path)
 
     return path
+
 
 async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
@@ -105,6 +101,9 @@ async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
     caption=text
     )
 
+    await update.message.reply_text("Banner posted.")
+
+
 async def promo(update,context):
 
     image = create_banner(
@@ -118,6 +117,9 @@ async def promo(update,context):
     photo=open(image,"rb"),
     caption=f"🚀 Boost your social media instantly\n{WEBSITE}"
     )
+
+    await update.message.reply_text("Promo banner posted.")
+
 
 async def deal_banner(update,context):
 
@@ -133,6 +135,9 @@ async def deal_banner(update,context):
     caption=f"💰 Limited offer\n{WEBSITE}"
     )
 
+    await update.message.reply_text("Deal banner posted.")
+
+
 async def review_banner(update,context):
 
     image = create_banner(
@@ -146,6 +151,9 @@ async def review_banner(update,context):
     photo=open(image,"rb"),
     caption="⭐ Trusted worldwide"
     )
+
+    await update.message.reply_text("Review banner posted.")
+
 
 async def reseller_banner(update,context):
 
@@ -161,9 +169,12 @@ async def reseller_banner(update,context):
     caption=f"Join reseller program\n{WEBSITE}"
     )
 
+    await update.message.reply_text("Reseller banner posted.")
+
+
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
-    text = f"""
+    text = """
 🤖 SDM SMM PANEL BOT
 
 Commands:
@@ -179,9 +190,11 @@ Commands:
 
     await update.message.reply_text(text)
 
+
 async def generate(update,context):
 
     await update.message.reply_text(random.choice(posts))
+
 
 async def reseller(update,context):
 
@@ -194,13 +207,14 @@ async def reseller(update,context):
 
 Invite users and earn.
 
-Your link:
+Your referral link:
 {link}
 
 🌐 {WEBSITE}
 """
 
     await update.message.reply_text(text)
+
 
 async def autoreply(update,context):
 
@@ -211,8 +225,8 @@ async def autoreply(update,context):
         if key in text:
 
             await update.message.reply_text(AUTO_REPLIES[key])
-
             return
+
 
 async def autopost(app):
 
@@ -234,6 +248,7 @@ async def autopost(app):
 
         await asyncio.sleep(wait)
 
+
 def main():
 
     app = Application.builder().token(BOT_TOKEN).build()
@@ -253,6 +268,7 @@ def main():
     loop.create_task(autopost(app))
 
     app.run_polling()
+
 
 if __name__ == "__main__":
     main()
