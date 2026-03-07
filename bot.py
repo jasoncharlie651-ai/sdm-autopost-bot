@@ -1,6 +1,7 @@
 import asyncio
 import random
 import os
+import json
 
 from telegram import Update
 from telegram.ext import (
@@ -19,34 +20,45 @@ WEBSITE = "https://sdmpanel.co.in"
 DIRECT = "https://t.me/sdmsmmpanel?direct"
 
 
-posts = [
+# Load posts
+with open("posts.json", "r", encoding="utf-8") as f:
+    posts = json.load(f)
 
-"🚀 Skyrocket your social media success!\nGet real followers, likes & views in minutes.\n🌐 https://sdmpanel.co.in\n📢 https://t.me/sdmsmmpanel?direct",
-
-"💥 Want viral growth?\nInstant followers, likes & watchtime.\n🌐 https://sdmpanel.co.in\n📢 https://t.me/sdmsmmpanel?direct",
-
-"📊 Boost your brand presence now!\nAuthentic SMM services.\n🌐 https://sdmpanel.co.in\n📢 https://t.me/sdmsmmpanel?direct",
-
-"🌟 Be the next trending creator!\nQuality engagement services.\n🌐 https://sdmpanel.co.in",
-
-"🔥 Supercharge your social proof!\nReal results fast.\n🌐 https://sdmpanel.co.in",
-
-"⚡ Instant boost for influencers!\nTikTok • Instagram • YouTube\n🌐 https://sdmpanel.co.in"
-
-]
+# Load hashtag sets
+with open("hashtags.json", "r", encoding="utf-8") as f:
+    hashtags = json.load(f)
 
 
 AUTO_REPLIES = {
 
-"price": f"💰 Check services:\n{WEBSITE}",
+"price": f"💰 Check our services:\n{WEBSITE}",
 
-"panel": f"🚀 Order here:\n{WEBSITE}",
+"panel": f"🚀 Order SMM services here:\n{WEBSITE}",
 
 "followers": f"📈 Boost followers instantly:\n{WEBSITE}",
 
-"buy": f"🛒 Order now:\n{WEBSITE}"
+"buy": f"🛒 Start your order here:\n{WEBSITE}",
+
+"smm": f"🌐 Visit our SMM Panel:\n{WEBSITE}"
 
 }
+
+
+def generate_message():
+
+    post = random.choice(posts)["text"]
+
+    tag = random.choice(hashtags)
+
+    message = f"""{post}
+
+🌐 {WEBSITE}
+📢 {DIRECT}
+
+{tag}
+"""
+
+    return message
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -56,8 +68,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 Commands:
 
-/generate  - random promo text
-/reseller  - get referral link
+/generate - generate promo message
+/reseller - get referral link
+
+Bot features:
+• Auto marketing posts
+• Anti-spam rotating hashtags
+• Viral promo messages
 """
 
     await update.message.reply_text(text)
@@ -65,7 +82,9 @@ Commands:
 
 async def generate(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    await update.message.reply_text(random.choice(posts))
+    message = generate_message()
+
+    await update.message.reply_text(message)
 
 
 async def reseller(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,7 +96,7 @@ async def reseller(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = f"""
 💼 RESELLER PROGRAM
 
-Invite users and earn.
+Earn by inviting users.
 
 Your referral link:
 {link}
@@ -105,17 +124,22 @@ async def autopost(app):
 
     while True:
 
-        text = random.choice(posts)
+        message = generate_message()
 
-        await app.bot.send_message(
+        try:
 
-            chat_id=CHANNEL_ID,
+            await app.bot.send_message(
+                chat_id=CHANNEL_ID,
+                text=message
+            )
 
-            text=text
+            print("Posted new promo message")
 
-        )
+        except Exception as e:
 
-        wait = random.randint(2,3) * 3600
+            print("Posting error:", e)
+
+        wait = random.randint(2, 3) * 3600
 
         print(f"Next post in {wait/3600} hours")
 
@@ -136,8 +160,11 @@ def main():
 
     asyncio.get_event_loop().create_task(autopost(app))
 
+    print("Bot running...")
+
     app.run_polling()
 
 
 if __name__ == "__main__":
+
     main()
