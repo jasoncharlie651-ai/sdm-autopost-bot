@@ -46,7 +46,6 @@ def create_ai_banner(title, subtitle, color1, color2):
     width = 1200
     height = 1200
 
-    # create gradient background
     img = Image.new("RGB", (width, height), color1)
     draw = ImageDraw.Draw(img)
 
@@ -60,10 +59,8 @@ def create_ai_banner(title, subtitle, color1, color2):
     font_mid = ImageFont.load_default()
     font_small = ImageFont.load_default()
 
-    # logo
     try:
         logo = Image.open("assets/logo.png").resize((180,180))
-
         if logo.mode == "RGBA":
             img.paste(logo,(60,60),logo)
         else:
@@ -71,23 +68,9 @@ def create_ai_banner(title, subtitle, color1, color2):
     except:
         pass
 
-    # headline
-    draw.text(
-        (120,350),
-        title,
-        fill="white",
-        font=font_big
-    )
+    draw.text((120,350), title, fill="white", font=font_big)
+    draw.text((120,500), subtitle, fill="white", font=font_mid)
 
-    # subtitle
-    draw.text(
-        (120,500),
-        subtitle,
-        fill="white",
-        font=font_mid
-    )
-
-    # feature bullets
     features = [
         "✔ Real Followers",
         "✔ Instant Delivery",
@@ -101,20 +84,10 @@ def create_ai_banner(title, subtitle, color1, color2):
         draw.text((120,y), f, fill="white", font=font_small)
         y += 70
 
-    # CTA
-    draw.rectangle(
-        [(120,900),(650,980)],
-        fill=(255,255,255)
-    )
+    draw.rectangle([(120,900),(650,980)], fill=(255,255,255))
 
-    draw.text(
-        (140,920),
-        "ORDER NOW →",
-        fill="black",
-        font=font_small
-    )
+    draw.text((140,920),"ORDER NOW →", fill="black", font=font_small)
 
-    # footer
     draw.text(
         (120,1050),
         "sdmpanel.co.in | t.me/sdmsmmpanel",
@@ -131,6 +104,7 @@ def create_ai_banner(title, subtitle, color1, color2):
 
     return path
 
+
 async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
     text = " ".join(context.args)
@@ -139,12 +113,17 @@ async def banner(update:Update,context:ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Usage: /banner your text")
         return
 
-    image = create_banner(text,"Followers • Likes • Views",(30,50,120))
+    image = create_ai_banner(
+        "SMM PANEL PROMO",
+        text,
+        (30,60,200),
+        (140,40,200)
+    )
 
     await context.bot.send_photo(
-    chat_id=CHANNEL_ID,
-    photo=open(image,"rb"),
-    caption=text
+        chat_id=CHANNEL_ID,
+        photo=open(image,"rb"),
+        caption=text
     )
 
     await update.message.reply_text("Banner posted.")
@@ -167,6 +146,7 @@ async def promo(update, context):
 
     await update.message.reply_text("AI promo banner posted.")
 
+
 async def deal_banner(update, context):
 
     image = create_ai_banner(
@@ -184,18 +164,20 @@ async def deal_banner(update, context):
 
     await update.message.reply_text("Deal banner posted.")
 
+
 async def review_banner(update,context):
 
-    image = create_banner(
-    "⭐ CUSTOMER REVIEW",
-    "Amazing SMM services!",
-    (40,130,80)
+    image = create_ai_banner(
+        "⭐ CUSTOMER REVIEW",
+        "Amazing SMM services!",
+        (40,130,80),
+        (20,80,50)
     )
 
     await context.bot.send_photo(
-    CHANNEL_ID,
-    photo=open(image,"rb"),
-    caption="⭐ Trusted worldwide"
+        CHANNEL_ID,
+        photo=open(image,"rb"),
+        caption="⭐ Trusted worldwide"
     )
 
     await update.message.reply_text("Review banner posted.")
@@ -203,16 +185,17 @@ async def review_banner(update,context):
 
 async def reseller_banner(update,context):
 
-    image = create_banner(
-    "💼 RESELLER PROGRAM",
-    "Earn selling SMM services",
-    (120,40,140)
+    image = create_ai_banner(
+        "💼 RESELLER PROGRAM",
+        "Earn selling SMM services",
+        (120,40,140),
+        (80,30,120)
     )
 
     await context.bot.send_photo(
-    CHANNEL_ID,
-    photo=open(image,"rb"),
-    caption=f"Join reseller program\n{WEBSITE}"
+        CHANNEL_ID,
+        photo=open(image,"rb"),
+        caption=f"Join reseller program\n{WEBSITE}"
     )
 
     await update.message.reply_text("Reseller banner posted.")
@@ -276,21 +259,25 @@ async def autoreply(update,context):
 
 async def autopost(app):
 
-    await app.bot.initialize()
-
     while True:
 
         text = random.choice(posts)
 
-        image = create_banner(text,"",(25,45,100))
-
-        await app.bot.send_photo(
-        CHANNEL_ID,
-        photo=open(image,"rb"),
-        caption=text
+        image = create_ai_banner(
+            "BOOST YOUR SOCIAL MEDIA 🚀",
+            text,
+            (30,60,200),
+            (140,40,200)
         )
 
-        wait = random.randint(2,3)*3600
+        await app.bot.send_photo(
+            chat_id=CHANNEL_ID,
+            photo=open(image,"rb"),
+            caption=text
+        )
+
+        wait = random.randint(2,3) * 3600
+        print(f"Next post in {wait/3600} hours")
 
         await asyncio.sleep(wait)
 
@@ -310,8 +297,7 @@ def main():
 
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,autoreply))
 
-    loop = asyncio.get_event_loop()
-    loop.create_task(autopost(app))
+    asyncio.get_event_loop().create_task(autopost(app))
 
     app.run_polling()
 
